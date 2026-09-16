@@ -105,7 +105,7 @@ runtime="$stage/unpacked/agent-board"
 export AGENT_BOARD_STAGED_RUNTIME="$runtime"
 export AGENT_BOARD_EXPECTED_VERSION="$release" AGENT_BOARD_EXPECTED_COMMIT="$commit" AGENT_BOARD_EXPECTED_TARGET="$target"
 if [ "$yes" -eq 1 ]; then
-  "$runtime/bin/node" "$runtime/app/src/cli.js" install "${original[@]}"
+  "$runtime/bin/node" "$runtime/app/src/cli.js" install ${original[@]+"${original[@]}"}
 else
-  "$runtime/bin/node" "$runtime/app/src/cli.js" install "${original[@]}" <&3
+  "$runtime/bin/node" "$runtime/app/src/cli.js" install ${original[@]+"${original[@]}"} <&3
 fi
