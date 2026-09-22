@@ -8,7 +8,7 @@ die() { printf 'Agent Board: %s\n' "$*" >&2; exit 1; }
 catalog='claude-code codex gemini opencode droid qwen cursor vscode vscode-insiders copilot cline continue zed windsurf devin roo-code'
 valid_host() { case " $catalog " in *" $1 "*) return 0;; *) return 1;; esac; }
 original=("$@")
-hosts='' yes=0 list=0 version=0 help=0
+hosts='' transport='' yes=0 list=0 version=0 help=0
 overrides=()
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -28,6 +28,11 @@ while [ "$#" -gt 0 ]; do
       for previous in ${overrides[@]+"${overrides[@]}"}; do [ "$previous" != "$host" ] || die 'Duplicate configuration override'; done
       overrides+=("$host")
       ;;
+    --transport|--transport=*)
+      [ -z "$transport" ] || die '--transport may only be supplied once'
+      case "$1" in --transport=*) transport=${1#*=};; *) [ "$#" -ge 2 ] || die '--transport requires a value'; shift; transport=$1;; esac
+      case "$transport" in stdio|http) ;; *) die '--transport must be stdio or http';; esac
+      ;;
     --yes) yes=1;;
     --dry-run|--json) ;;
     --list-hosts) list=1;;
@@ -37,7 +42,7 @@ while [ "$#" -gt 0 ]; do
   esac
   shift
 done
-[ "$help" -eq 0 ] || { printf 'Usage: curl -fsSL INSTALL_URL | bash -s -- [--hosts codex,claude-code --yes] [--dry-run] [--json]\n'; exit 0; }
+[ "$help" -eq 0 ] || { printf 'Usage: curl -fsSL INSTALL_URL | bash -s -- [--hosts codex,claude-code --yes] [--transport stdio|http] [--dry-run] [--json]\n'; exit 0; }
 [ "$version" -eq 0 ] || { printf 'Agent Board installer 0.8.0 (protocol 1)\n'; exit 0; }
 [ "$list" -eq 0 ] || { for host in $catalog; do printf '%s\n' "$host"; done; exit 0; }
 for host in ${overrides[@]+"${overrides[@]}"}; do case ",$hosts," in *",$host,"*) ;; *) die '--config-path requires selecting its host with --hosts';; esac; done
