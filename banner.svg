@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-label="agent-board">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0e1116"/>
+      <stop offset="1" stop-color="#12161e"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="360" rx="24" fill="url(#bg)"/>
+  <rect x="1" y="1" width="1198" height="358" rx="23" fill="none" stroke="#262c36" stroke-width="2"/>
+
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace">
+    <!-- left: three agents -->
+    <rect x="70" y="58" width="118" height="46" rx="9" fill="#171b22" stroke="#262c36" stroke-width="2"/>
+    <text x="129" y="88" font-size="17" fill="#8b98a9" text-anchor="middle">claude</text>
+
+    <rect x="70" y="157" width="118" height="46" rx="9" fill="#171b22" stroke="#262c36" stroke-width="2"/>
+    <text x="129" y="187" font-size="17" fill="#8b98a9" text-anchor="middle">codex</text>
+
+    <rect x="70" y="256" width="118" height="46" rx="9" fill="#171b22" stroke="#262c36" stroke-width="2"/>
+    <text x="129" y="286" font-size="17" fill="#8b98a9" text-anchor="middle">gemini</text>
+
+    <!-- wires in -->
+    <path d="M188 81 C 240 81, 250 168, 296 172" fill="none" stroke="#262c36" stroke-width="2"/>
+    <path d="M188 180 L 296 180" fill="none" stroke="#262c36" stroke-width="2"/>
+    <path d="M188 279 C 240 279, 250 192, 296 188" fill="none" stroke="#262c36" stroke-width="2"/>
+
+    <!-- the board -->
+    <rect x="296" y="146" width="150" height="68" rx="12" fill="#171b22" stroke="#4c9aff" stroke-width="2.5"/>
+    <text x="371" y="172" font-size="18" fill="#4c9aff" text-anchor="middle" font-weight="bold">board</text>
+    <text x="371" y="196" font-size="13" fill="#8b98a9" text-anchor="middle">one team</text>
+
+    <!-- wires out to teammates -->
+    <path d="M446 168 C 480 158, 484 128, 506 118" fill="none" stroke="#262c36" stroke-width="2"/>
+    <path d="M446 192 C 480 202, 484 232, 506 242" fill="none" stroke="#262c36" stroke-width="2"/>
+
+    <circle cx="536" cy="108" r="24" fill="#171b22" stroke="#3fb950" stroke-width="2"/>
+    <text x="536" y="114" font-size="15" fill="#3fb950" text-anchor="middle">pm</text>
+
+    <circle cx="536" cy="252" r="24" fill="#171b22" stroke="#3fb950" stroke-width="2"/>
+    <text x="536" y="258" font-size="15" fill="#3fb950" text-anchor="middle">qa</text>
+
+    <!-- right: wordmark -->
+    <text x="620" y="140" font-size="58" font-weight="bold" fill="#e6edf3">agent<tspan fill="#4c9aff">-board</tspan></text>
+    <text x="620" y="182" font-size="20" fill="#8b98a9">Every AI agent on your machine. One team.</text>
+
+    <rect x="620" y="222" width="486" height="54" rx="10" fill="#171b22" stroke="#262c36" stroke-width="2"/>
+    <text x="642" y="245" font-size="14" fill="#3fb950">curl -fsSL https://raw.githubusercontent.com</text>
+    <text x="642" y="266" font-size="14" fill="#3fb950">  /hatish2001/agent-board-releases/main/install.sh | bash</text>
+
+    <text x="620" y="316" font-size="14" fill="#6e7681">pick your tools · press enter · your agents know each other</text>
+  </g>
+</svg>
