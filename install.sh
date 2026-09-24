@@ -55,6 +55,7 @@ else
 fi
 command -v curl >/dev/null || die 'curl is required'
 command -v tar >/dev/null || die 'tar is required'
+command -v openssl >/dev/null || die 'openssl is required to verify release signatures'
 if command -v shasum >/dev/null; then sha=(shasum -a 256); elif command -v sha256sum >/dev/null; then sha=(sha256sum); else die 'A SHA-256 utility is required'; fi
 at_least() { awk -v actual="$1" -v minimum="$2" 'BEGIN { split(actual,a,"."); split(minimum,b,"."); for(i=1;i<=3;i++){ if(a[i]+0>b[i]+0)exit 0; if(a[i]+0<b[i]+0)exit 1 } exit 0 }'; }
 case "$(uname -s)" in
@@ -78,6 +79,22 @@ trap 'exit 143' TERM HUP
 base='https://github.com/hatish2001/agent-board-releases/releases'
 download() { curl --proto '=https' --proto-redir '=https' --tlsv1.2 --fail --silent --show-error --location --retry 2 --connect-timeout 15 --max-time 300 --max-filesize "$3" -o "$2" "$1"; }
 download "$base/latest/download/manifest.tsv" "$stage/manifest.tsv" 65536
+download "$base/latest/download/manifest.tsv.sig" "$stage/manifest.tsv.sig" 4096
+cat > "$stage/release-key.pem" <<'RELEASE-SIGNING-KEY'
+-----BEGIN PUBLIC KEY-----
+MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAuZXvAwFA/TjGh7O7FnCU
+C8GUuSAKfOpzRUoFWeKcfa75h4jyPK0yi17qc9EA1v3yWp+8LChvdwERoMYDacXs
+a63SiH2MpkMHu9eQR42tLa0sF4WmlA2Dy7p8Ve4oR/i/Y/2izeJUQwPjlApPMi22
+KTEfn9s7XuBzMf7zVvU/Oz624Wu6J2S5Ajq1XGmt9wFqbm5MR6kwhnJAdRnalj14
+WaGca78hoL8rTTefUUabEbezrWceJ2fVVshxM6ogp7SuiBTZKxZkIodZMlpIkcVt
+YWAyXq3m0XlanBUf8iD8JtwCB+FN5j+67WeRhA9O4msX5JzDoKIaboj2pkG8p4BF
+3bziCCFofCHNdQty20lTpqWpB3unvuqa0PhBR35/sedMqKROMkw9HfZaIM5jKRDD
+rBO7d99qWOd+EXb8y6d26fKhNfdGHk1LkRvt76H7JEyoY9k0bg8SwJBeLv0Hp9LQ
+jShJ0QqoVEPpO519STBOZGoHfcyPOEDE9Pt4QlVd9iFFAgMBAAE=
+-----END PUBLIC KEY-----
+RELEASE-SIGNING-KEY
+openssl dgst -sha256 -verify "$stage/release-key.pem" -signature "$stage/manifest.tsv.sig" "$stage/manifest.tsv" >/dev/null 2>&1 \
+  || die 'Release manifest signature verification failed; refusing to install'
 # Fixed seven-column format keeps bootstrap independent of Node, Python and jq.
 awk -F '\t' -v target="$target" '
   NF != 7 || $1 != "1" || $2 !~ /^[0-9]+\.[0-9]+\.[0-9]+$/ || length($3)!=40 || $3 !~ /^[a-f0-9]+$/ || $4 !~ /^(darwin|linux)-(arm64|x64)$/ || $5 !~ /^https:\/\/github.com\/hatish2001\/agent-board-releases\/releases\/download\/v[0-9.]+\/agent-board-[0-9.]+-(darwin|linux)-(arm64|x64)\.tar\.gz$/ || $6 !~ /^[0-9]+$/ || $6<1 || $6>536870912 || length($7)!=64 || $7 !~ /^[a-f0-9]+$/ { bad=1 }
