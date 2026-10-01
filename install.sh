@@ -8,8 +8,12 @@ die() { printf 'Agent Board: %s\n' "$*" >&2; exit 1; }
 catalog='claude-code codex gemini opencode droid qwen cursor vscode vscode-insiders copilot cline continue zed windsurf devin roo-code'
 valid_host() { case " $catalog " in *" $1 "*) return 0;; *) return 1;; esac; }
 original=("$@")
-hosts='' transport='' yes=0 list=0 version=0 help=0
+hosts='' transport='' yes=0 list=0 version=0 help=0 recover=0
 overrides=()
+# A standalone --help or -h wins over everything else, including options that
+# would fail validation below.
+for arg in "$@"; do case "$arg" in --help|-h) help=1;; esac; done
+[ "$help" -eq 0 ] || { printf 'Usage: curl -fsSL INSTALL_URL | bash -s -- [--hosts codex,claude-code --yes] [--transport stdio|http] [--dry-run] [--json]\n       curl -fsSL INSTALL_URL | bash -s -- --recover   (restore an interrupted installation)\n'; exit 0; }
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --hosts|--hosts=*)
@@ -37,16 +41,19 @@ while [ "$#" -gt 0 ]; do
     --dry-run|--json) ;;
     --list-hosts) list=1;;
     --version) version=1;;
-    --help) help=1;;
+    --recover) recover=1;;
     *) die "Unknown installer option: $1";;
   esac
   shift
 done
-[ "$help" -eq 0 ] || { printf 'Usage: curl -fsSL INSTALL_URL | bash -s -- [--hosts codex,claude-code --yes] [--transport stdio|http] [--dry-run] [--json]\n'; exit 0; }
-[ "$version" -eq 0 ] || { printf 'Agent Board installer 0.8.0 (protocol 1)\n'; exit 0; }
+# The bootstrap always installs the latest signed release; `agent-board --version` reports the installed one.
+[ "$version" -eq 0 ] || { printf 'Agent Board bootstrap installer (protocol 1; installs the latest signed release)\n'; exit 0; }
 [ "$list" -eq 0 ] || { for host in $catalog; do printf '%s\n' "$host"; done; exit 0; }
 for host in ${overrides[@]+"${overrides[@]}"}; do case ",$hosts," in *",$host,"*) ;; *) die '--config-path requires selecting its host with --hosts';; esac; done
-if [ "$yes" -eq 1 ]; then
+if [ "$recover" -eq 1 ]; then
+  # Recovery needs no prompt; it is also the path when no launcher exists yet.
+  [ -z "$hosts" ] && [ -z "$transport" ] || die '--recover cannot be combined with a host selection'
+elif [ "$yes" -eq 1 ]; then
   [ -n "$hosts" ] || die '--yes requires an explicit --hosts selection'
 else
   # The script may arrive on stdin. Prompts use the controlling terminal.
@@ -75,7 +82,8 @@ stage=$(mktemp -d "${TMPDIR:-/tmp}/agent-board-download.XXXXXXXX")
 cleanup() { rm -rf -- "$stage"; }
 trap cleanup EXIT
 trap 'exit 130' INT
-trap 'exit 143' TERM HUP
+trap 'exit 143' TERM
+trap 'exit 129' HUP
 base='https://github.com/hatish2001/agent-board-releases/releases'
 download() { curl --proto '=https' --proto-redir '=https' --tlsv1.2 --fail --silent --show-error --location --retry 2 --connect-timeout 15 --max-time 300 --max-filesize "$3" -o "$2" "$1"; }
 download "$base/latest/download/manifest.tsv" "$stage/manifest.tsv" 65536
@@ -126,7 +134,7 @@ runtime="$stage/unpacked/agent-board"
 [ -f "$runtime/bin/node" ] && [ -f "$runtime/app/src/cli.js" ] || die 'Incomplete runtime archive'
 export AGENT_BOARD_STAGED_RUNTIME="$runtime"
 export AGENT_BOARD_EXPECTED_VERSION="$release" AGENT_BOARD_EXPECTED_COMMIT="$commit" AGENT_BOARD_EXPECTED_TARGET="$target"
-if [ "$yes" -eq 1 ]; then
+if [ "$yes" -eq 1 ] || [ "$recover" -eq 1 ]; then
   "$runtime/bin/node" "$runtime/app/src/cli.js" install ${original[@]+"${original[@]}"}
 else
   "$runtime/bin/node" "$runtime/app/src/cli.js" install ${original[@]+"${original[@]}"} <&3
